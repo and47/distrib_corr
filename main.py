@@ -6,7 +6,7 @@ from pathlib import Path
 
 import datetime as dt
 
-from p1_funs import *
+from p1_funs import persist_rets_bin, load_rets_from_bin, floatr_to_uint_minret, uint_ret_offs_tofloatr
 
 xcret = pd.read_pickle('data/company_returns.pkl')
 ymret = pd.read_pickle('data/market_returns.pkl')  # bdays only
@@ -95,13 +95,13 @@ np.nanmin(np.abs(arr))
 
 # first, use defined function to convert float64 to uint16 per this logic:
 
-float_to_uint_minret(xret.values, prec=5, minval=-0.1)  # can use for our random data
-float_to_uint_minret(xret.values, prec=4, minval=-1)  # appropriate defaults for stock returns
+floatr_to_uint_minret(xret.values, prec=5, minval=-0.1)  # can use for our random data
+floatr_to_uint_minret(xret.values, prec=4, minval=-1)  # appropriate defaults for stock returns
 
 
 # calstart = dt.datetime(2000, 1, 1)
 
-persist_rets_bin(str(fname) + r'\uint16offst', xret, to_int=np.uint16)
+persist_rets_bin(str(fname) + r'\uint16offst', xret, to_int=np.uint16, prec=4, minval=-1)  # 34 MB
 # 80% reduction in size, but obviously we lose precision, may be outside of the task scope
 
 xret2 = load_rets_from_bin('uint16offst_npcomprsd.npz', val_dtype=np.uint16, prec=4, minval=-1)  # also converts uint16 to float64
@@ -109,9 +109,26 @@ xret2 = load_rets_from_bin('uint16offst_npcomprsd.npz', val_dtype=np.uint16, pre
 prec = 4
 stepsz = 10**(-prec)  # fails with smaller rounding or np.close 0
 assert np.nanmax(np.abs(xret.values.round(4) - xret2.values)) < stepsz, "reconstructed values differ from original"
-assert np.nanmax(np.abs(xret.values - xret2.values)) < stepsz*2, "reconstructed values differ from original"
-# may still some bug in my code, which minimally distorts precision up to 0.0002 not 0.0001
-#  needs improvement before production use
+assert np.nanmax(np.abs(xret.values - xret2.values)) < stepsz, "reconstructed values differ from original"
+#  may need improvement before production use
 np.nanmean(np.abs(xret.values - xret2.values))
-:q
+
+
+
+# also, test range functionality, mapping e.g. floats betweer values [-1, 1] to ints [0, 65535] assumption of fixed step
+xret3rng = floatr_to_uint_minret(xret.values.copy(), minval=-0.07, maxval=0.07)
+xret3_orng = uint_ret_offs_tofloatr(xret3rng, minval=-0.07, maxval=0.07)
+np.nanmean(np.abs(xret.values.round(4) - xret3_orng))  # strangely on range precision is worse than on minret only, same with nanmax
+
+
+
+xret3rngu = floatr_to_uint_minret(xret.values.copy(), prec=4, minval=-1)
+xret3_orngu = uint_ret_offs_tofloatr(xret3rngu, prec=4, minval=-1)
+
+np.nanmean(np.abs(xret.values.round(4) - xret3_orngu))  # indeed, yields smallest error, same with nanmax
+
+# chk worst case max abs error
+np.nanmax(np.abs(xret.values.round(4) - xret3_orngu))  # 0.0001
+np.nanmax(np.abs(xret.values.round(4) - xret3_orng))  # 0.0001
+
 
