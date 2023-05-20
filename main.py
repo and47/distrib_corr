@@ -6,6 +6,8 @@ from pathlib import Path
 
 import datetime as dt
 
+from p1_funs import *
+
 xcret = pd.read_pickle('data/company_returns.pkl')
 ymret = pd.read_pickle('data/market_returns.pkl')  # bdays only
 
@@ -55,5 +57,46 @@ table = pa.Table.from_pandas(xret)
 pq.write_table(table, 'array.parquet')  # already less than pkl only 20% more than np compressed
 pq.write_table(table, 'xretgzipped.parquet', compression='gzip')  # already less than pkl only 20% more than np compressed
 # gzip only 3% improvement over uncompressed parquet, zstd same, no improvement with brotli either
+
+
+# it's possible to decrease further with better compression tools or
+# by losing precision (float32) or by using a different format (e.g. hdf5, shuffling here won't help)
+# this decreases size of nobs * ncomps * 8 bytes for float64 from 232 to 160 MB
+
+# also, we can use min and max values from data to create custom dtype:
+np.nanmax(arr)
+np.nanmin(arr)
+
+# but this is a bit like cheating, instead we can make use of the fact that stock returns are > -1
+
+
+# numpy.uint16  # 0 to 65535, whereas uint8 is 0 to 255 (not enough for either company ids or dates)
+
+
+# 32-bit floating-point values cover range from 1.175494351 * 10^-38 to 3.40282347 * 10^+38,
+# whcih is too much for stock returns, so we may want to limit precision to 4 or 5 digits after the decimal point
+# (e.g. 1.2345e-2) and use integers to count number of steps (e.g. 0.0001 step size for 4 digits after the decimal point)
+# from minimal value, which for stock returns is -1, so we can use uint16 for that:
+
+# first, use defined function to convert float64 to uint16 per this logic:
+
+
+a = float_to_uint_minret(xret.values, prec=2)
+a = float_to_uint_minret(xret.values, prec=5, minval=-0.1)  # can use for our random data
+a = float_to_uint_minret(xret.values, prec=4, minval=-1)  # appropriate defaults for stock returns
+
+np.unique(a)
+a[a>0].min()
+a.max()
+
+arr= xret
+calstart = dt.datetime(2000, 1, 1)
+
+fname_ = Path(os.getcwd())
+
+persist_rets_bin(str(fname_) + r'\fl', xret)
+persist_rets_bin(str(fname_) + r'\uint16off', xret, to_int=np.uint16)
+
+
 
 
