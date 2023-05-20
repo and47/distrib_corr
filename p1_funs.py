@@ -66,3 +66,66 @@ def persist_rets_bin(fname: str, arr: np.ndarray | pd.DataFrame,
     np.savez_compressed(str(fname) + '_npcomprsd', arr=arr, firms=firms, bd_offs=bd_offs)
 
 
+
+def uint_ret_offs_tofloat(arr: np.ndarray, prec=4, minval=-1, dtype_: np.dtype = np.uint16) -> np.ndarray:
+    """
+    Convert integer array to float64 array using given levels of minval and precision.
+
+    To restore float64 array from integers representing stock returns as offsets
+     (of steps, sized according to level of precision) from minimum possible return (e.g. -1 or -100%).
+     E.g. uint16 array with minimum value of minval and precision of prec digits after the decimal point.
+
+    :param arr: array of integers representing stock returns
+    :param prec: number of digits after the decimal point that was kept
+    :param dtype_: integer data type used for storing the result
+    :param minval: minimum possible value for stock return (e.g. -1 or -100%), which was used to calculate offset
+    :return: array of float64 values representing stock returns
+    """
+    assert arr.ndim == 2
+    assert arr.dtype == dtype_
+    out = np.full_like(arr, np.nan, dtype=np.float64)
+    stepsz = 10**(-prec)
+    out[arr != 0] = arr[arr != 0] * stepsz - (-minval + stepsz)
+    return out
+
+
+def load_rets_from_bin(fpath: str, as_numpy: bool = False,
+                       calstart: np.datetime64 = dt.datetime(2000, 1, 1),
+                       cat_dtype: np.dtype = np.uint16,
+                       dat_dtype: np.dtype = np.uint16,
+                       val_dtype: np.dtype = None, prec: int = None,
+                       minval: float = None, maxval: float = None) -> pd.DataFrame | np.ndarray:
+    """
+    Load stock returns from binary file into DataFrame or ndarray.
+
+    Reconstructs return values and metadata (columns with company ids and index of dates).
+
+    :param fpath: path to binary file to load data from
+    :param as_numpy: True to return ndarray, False to return DataFrame
+    :param calstart: calendar start date, which was used to calculate business day offsets
+    :param cat_dtype: company id data type used (usually depends on number of companies)
+    :param dat_dtype: date offset data type used (usually depends on number of dates since calstart)
+    :param val_dtype: integer data type if used for storing the result as offets from minval
+    :param prec: number of digits after the decimal point that was kept [to-do: save this as metadata to auto-reconstruct]
+    :param minval: minimum possible value for stock return (e.g. -1 or -100%), used to calculate offset
+    :return: a table of stock returns (2D ndarray or Pandas DataFrame)
+    """
+    uncompressed_arrs = np.load(file=fpath)
+    arr = uncompressed_arrs['arr']
+    if val_dtype is None or val_dtype == np.float64:
+        val_dtype = np.float64
+        assert arr.dtype == val_dtype
+    else:
+        arr = uint_ret_offs_tofloat(arr, prec=prec, minval=minval, dtype_=val_dtype)
+    if as_numpy:
+        return arr
+    else:
+        assert arr.ndim == 2, "Pandas DataFrame can only be constructed from 2D array, a table expected"
+        firms = uncompressed_arrs['firms']
+        from pandas.tseries.offsets import BDay  # move to top if will be used elsewhere
+        bd_offs = uncompressed_arrs['bd_offs']
+        assert arr.shape == (bd_offs.shape[0], firms.shape[0])
+        assert firms.dtype == cat_dtype
+        assert bd_offs.dtype == dat_dtype
+        dates = np.array([(calstart + BDay(x)).date() for x in bd_offs])
+        return pd.DataFrame(arr, index=dates, columns=firms)

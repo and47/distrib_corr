@@ -96,7 +96,13 @@ fname_ = Path(os.getcwd())
 
 persist_rets_bin(str(fname_) + r'\fl', xret)
 persist_rets_bin(str(fname_) + r'\uint16off', xret, to_int=np.uint16)
+# 80% reduction in size, but obviously we lose precision, may be outside of the task scope
 
 
+xret2 = load_rets_from_bin('uint16off_npcomprsd.npz', val_dtype=np.uint16, prec=4, minval=-1)
 
+prec = 4
+stepsz = 10**(-prec)  # fails with smaller rounding or np.close 0
+assert np.nanmax(np.abs(xret.values.round(4) - xret2.values)) < stepsz, "reconstructed values differ from original"
+# may still some bug in my code, which minimally distorts precision, needs improvement before production use
 
