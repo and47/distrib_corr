@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 
+from pathlib import Path
+
 # todo: extend both functions to allow for upper bound (maxval) only to be specified,
 #       implement e.g. as a recursive function that calls itself with minval = -maxval
 def floatr_to_uint_minret(arr: np.ndarray, dtype_: np.dtype = np.uint16, prec: int = None,
@@ -78,7 +80,7 @@ def uint_ret_offs_tofloatr(arr: np.ndarray, dtype_: np.dtype = np.uint16, prec: 
         out[arr != 0] = (arr[arr != 0] - 1) / stepsz_rcp + minval  # subtract 1 as 0 was reserved for nans, 1 for minval
     return out
 
-def persist_rets_bin(fname: str, arr: np.ndarray | pd.DataFrame,
+def persist_rets_bin(fname: str | Path, arr: np.ndarray | pd.DataFrame,
                      calstart: np.datetime64 = dt.datetime(2000, 1, 1),
                      cat_dtype: np.dtype = np.uint16,
                      dat_dtype: np.dtype = np.uint16,
@@ -89,7 +91,7 @@ def persist_rets_bin(fname: str, arr: np.ndarray | pd.DataFrame,
     Optionally, save metadata such as time index and company ids
      and convert to integer values.
 
-    :param fname: file name
+    :param fname: file name (can be Path)
     :param arr: returns array or DataFrame with time index and company ids
      in columns
     :param calstart: calendar start date, used to calculate business day offsets

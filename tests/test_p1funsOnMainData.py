@@ -15,6 +15,10 @@ from itertools import repeat
 
 seed = 123
 
+# TODAY = pd.Timestamp.today()
+# CALSTART = dt.datetime(2000, 1, 1)
+# S_YR2K = '2000-01-01'  # some globals may be useful in future, as already do repeat in below code
+
 genor_ran = np.random.default_rng()  # new per NEP 19, can be used with Cython
 genor_fix = np.random.default_rng(seed)
 
