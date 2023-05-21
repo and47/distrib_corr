@@ -28,7 +28,7 @@ def create_test_data(genor, N_companies = 5000, N_dates = 4000, dates = pd.bdate
 # see seed, even fixed not the same as currently used in main (to-do?)
 @pytest.fixture
 def fixed_data() -> tuple:
-    market, df = create_test_data(genor_fix)
+    market, df = create_test_data(genor_fix, dates=pd.bdate_range('2000-01-01', '2023-05-20'))
     return market, df
 
 @pytest.fixture
@@ -41,13 +41,14 @@ def test_initiate(fixed_data, rndm_data):
     xret = df.unstack('companyid')
     assert len(market.shape) == 1 and market.shape[0] == xret.shape[0]
     assert market.index.is_monotonic_increasing
-    # assert xret.shape == (6095, 5000)  # changes with run day (uses today's date)
-    assert xret.shape
+    # assert xret.shape == (6095, 5000)
+    exp_rows = np.busday_count(pd.to_datetime('2000-01-01').date(), pd.Timestamp.today().date())
+    assert xret.shape == (6100, 5000)  # for random changes with run day (uses today's date)
     assert ~np.array_equal(rndm_data[0], market)  # different but equivalent shape
-    assert rndm_data[0].shape == market.shape
+    assert rndm_data[0].shape == exp_rows, market.shape[1]
     dfran = rndm_data[1].unstack('companyid')
     assert ~np.array_equal(dfran, xret)
-    assert dfran.shape == xret.shape
+    assert dfran.shape == (exp_rows, xret.shape[1])
     print('random data (mkt and stock mins): ', np.nanmin(rndm_data[0]), np.nanmin(dfran))  # should be different
     print(' fixed data (mkt and stock mins): ', np.nanmin(market), np.nanmin(df))  # should be:
     # -0.028345506444168257 -0.06909354203029808
@@ -59,3 +60,6 @@ def test_initiate(fixed_data, rndm_data):
 # test_reconstruction
 #
 # test_savedsize
+
+
+# unfortunately, benchmark plugin only tests speed, not memory (disk usage); so not for compression comparison
