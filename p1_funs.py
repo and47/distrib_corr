@@ -32,14 +32,16 @@ def floatr_to_uint_minret(arr: np.ndarray, dtype_: np.dtype = np.uint16, prec: i
     if maxval and prec is None:
         assert minval < maxval
         stepsz = (maxval - minval) / (np.iinfo(dtype_).max - 1)  # -1 is to reserve 0 for NaNs
+        rarr += stepsz
         rarr /= stepsz
     else:
         assert prec and maxval is None, "either maxval or prec must be specified and not both"
         stepsz_rcp = 10 ** prec
+        rarr += 1 / stepsz_rcp  # increment by 1 step to reserve 0 for NaNs, stepsz for 0 (minreturn=-1)
         rarr *= stepsz_rcp
     np.round(rarr, out=rarr)
     assert np.nanmax(rarr) < np.iinfo(dtype_).max, f"overflown {dtype_} with > {np.iinfo(dtype_).max}"
-    return rarr.astype(dtype_) + 1  # reserve 0 for nans
+    return rarr.astype(dtype_)
 
 def uint_ret_offs_tofloatr(arr: np.ndarray, dtype_: np.dtype = np.uint16, prec: int = None,
                            minval: float = -1, maxval: float = None) -> np.ndarray:
