@@ -1,6 +1,7 @@
 import pandas as pd
 
 from input_proc import *  # xdf, ydf are company and market returns, respectively as pandas DataFrames
+from p2_funs import *  # rolling_corr, fill_firstNaN_ingaps
 
 # no significant discrepancies in the data, other than some missing values, maybe a couple at the
 # beginning of the series, but nothing that would affect the correlation calculation
@@ -14,6 +15,10 @@ from input_proc import *  # xdf, ydf are company and market returns, respectivel
 # using numpy, but pandas scales better (or at least easier with Dask) and PySpark
 # also, it's possible to apply numpy functions to pandas DataFrame columns and rely on
 # pandas to handle the indexing (rolling window) and alignment of the results (important for dates)
+# One disadvantage of pandas is that doesn't preserve the memory layout of the original numpy array:
+# regardless of whether original numpy array is in C (row-major) or Fortran (column-major) order,
+# pandas DataFrame will be in C order, so it's possible to lose some performance (e.g. cache misses),
+# which in practice I found to be ~3% on ~100MB data, unusually low impact
 
 # Numpy has a function for rolling window, but it's cumbersome to use:
 # np.lib.stride_tricks.sliding_window_view, and also the best algorithm would be
@@ -46,6 +51,8 @@ from input_proc import *  # xdf, ydf are company and market returns, respectivel
 xydf = pd.concat([xdf, ydf], axis=1)
 # xydf = pd.concat([xdf, ydf.to_frame('Y')], axis=1)  # in case need to name column uniquely
 
+
+# see p2_funs.py
 winsz = 505
 minp = 375
 xycorr = (
@@ -63,20 +70,11 @@ xycorr.isna().mean().mean()  # 99% NaNs without any imputation
 # doesn't do so (but only on price level), so with returns we need to impute 0 or risk-free rate,
 # but in order for this not to affect result too much, we do it only for one observation (leave remaining continious NaNs)
 # as we know that our data is randomly generated, we omit discussion of using mean, median or other advanced imputation
-def fill_firstNaN_ingaps(df, val):
-    mask = ~(df.isna() & df.ffill().isna())
-    mask &= df.isna()
-    mask &= df.shift(1).notna()
-    df[mask] = val
-    return df
+
 
 xydf = fill_firstNaN_ingaps(xydf, 0)  # reduces share of NaNs from 34% to 12%
 
-xycorr = (
-    xydf.
-    rolling(window=winsz, min_periods=minp).
-    corr(xydf.iloc[:, -1])  # pairwise rolling correlation of stock vs market returns
-)  # in prod code, it's best to rely on col names not idxs (unless for performance reasons) to reduce risk of bugs
+xycorr = rolling_corr(xydf, winsz, minp)  # in prod code, it's best to rely on col names not idxs (unless for performance reasons) to reduce risk of bugs
 
 xycorr.isna().mean().mean()  # 7% of NaNs, better than 99%, but still too much
 
