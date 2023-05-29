@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 
 def rolling_corr(df: pd.DataFrame, winsz: int = 505, minp: int = 375) -> pd.DataFrame:
     """
@@ -19,8 +20,18 @@ def rolling_corr(df: pd.DataFrame, winsz: int = 505, minp: int = 375) -> pd.Data
 
 
 def fill_firstNaN_ingaps(df: pd.DataFrame, val: float = 0.0) -> pd.DataFrame:
+    """
+    Fill NaNs in each column of df with val but only if there are no NaNs before filling
+
+    :param df: pandas DataFrame with columns of numeric type, e.g. float to allow NaNs
+    :param val: value to fill NaNs with (defaults 0.0, which is less interfering for stock returns than
+        previous observation, which is more appropriate for price level, or mean or median, which add
+        look-ahead bias). can also be e.g. risk-free rate
+    :return: dataframe with NaNs filled with val
+    """
     mask = ~(df.isna() & df.ffill().isna())
     mask &= df.isna()
     mask &= df.shift(1).notna()
     df[mask] = val
     return df
+
