@@ -10,6 +10,7 @@ import pytest
 from p2_funs import rolling_corr, fill_firstNaN_ingaps
 # data is imported from conftest.py
 
+COL_LIMIT = 100  # limit number of columns for testing, as local Spark in p3 is slow and below will be compared to it
 
 @pytest.fixture
 def fixed_df(fixed_data) -> pd.DataFrame:
@@ -43,22 +44,11 @@ def test_corr_res(request, df, benchmark):
     assert np.allclose(mcorr.iloc[109, 100], npmacorr[0, 1], rtol=1e-4), "differs from numpy"
 
 
-@pytest.mark.parametrize('df', ['fixed_df', 'rndm_df'])
-def test_corr_nans(request, df, benchmark, corr_params):
+@pytest.mark.parametrize('df, maxcol', [['fixed_df', COL_LIMIT], ['rndm_df', COL_LIMIT]])
+def test_corr_nans(request, benchmark, df, maxcol, corr_params):
     rets = request.getfixturevalue(df)  # market and company returns
     assert rets.index.is_monotonic_increasing
-    rets = fill_firstNaN_ingaps(rets, 0)
+    rets = fill_firstNaN_ingaps(rets.drop(rets.columns[maxcol:-1], axis=1), 0)
     mcorr = benchmark(rolling_corr, rets, winsz=corr_params[0], minp=corr_params[1])
     nan_ratio = mcorr.isna().mean().mean()
     assert nan_ratio < 0.2, f"Too many NaNs in output, {nan_ratio:.2%}"
-#
-#
-# pytestmark = pytest.mark.skipif(
-#     not os.environ.get("RUN_SLOW_TESTS"),
-#     reason="This test is slow or requires additional dependencies."
-# )
-#
-# pytestmark = pytest.mark.skipif(
-#     not os.environ.get("RUN_TESTS_FOR_UNUSED_FUNS"),
-#     reason="These tests are for experimental or knowingly worse functions not part of main solution."
-# )

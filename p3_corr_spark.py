@@ -12,7 +12,7 @@ import pyarrow.parquet as pq
 from p2_funs import fill_firstNaN_ingaps
 from p3_funs import hdist_roll_corr
 # from p2_corr import winsz, minp  # add __main__ to p2_corr.py to not run it on import
-winsz = 505
+winsz = 505  # temporary workaround
 
 from input_proc import *  # xdf, ydf are company and market returns, respectively as pandas DataFrames
 
@@ -58,7 +58,7 @@ w_corr.explain()  # execution plan
 
 # res = w_corr.toPandas()  # too big on full data, will error with 4gb driver memory
 res = w_corr.filter(w_corr.X < 10).toPandas()  # first 10 companies
-res = w_corr.filter(w_corr.X.isin([1, 99, 4998])).toPandas()  # or select specific ones
+# res = w_corr.filter(w_corr.X.isin([1, 99, 4998])).toPandas()  # or select specific ones
 
 
 
