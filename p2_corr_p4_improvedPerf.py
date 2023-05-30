@@ -84,7 +84,7 @@ xycorr.isna().mean().mean()  # 7% of NaNs, better than 99%, but still too much
 xycorrd = xycorr.iloc[minp:]  # 4626 rows, 500-375+1 = 126 rows less than original 4752
 
 
-
+# p4:
 # performance can further be improved by using numpy Fortran arrays for cache locality, as
 # we perform operations on columns. Also, as there are many companies, operation can be simply parallelized
 # which can be done with Numba.  There are distributed algorithms for correlation, but they are
@@ -97,3 +97,90 @@ xycorrd = xycorr.iloc[minp:]  # 4626 rows, 500-375+1 = 126 rows less than origin
 # in a perfect case, we'd keep track of performance of all these implementations using something like
 # pytest-benchmark, (not only ensuring correctness with pytest), as "ranking" may change over time with
 # newer version of Python, Numba, CUDA, Spark, etc.
+
+import numpy as np
+
+# Improvement -  implementation 1                    ##
+# My vectorized NumPy (see contiguous/cache-locality and "SIMD" for why it improves performance)
+#  implementation of Wikipedia "Online" (stable one-pass algorithm):
+# https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Covariance
+# Note: it's expanding window not rolling
+def corr_np(a1: np.ndarray, a2: np.ndarray, retcov: bool = False, roll: bool = False) -> np.ndarray:
+    # mean1 = mean2 = corr = N = 0
+    assert a1.shape == a2.shape
+    n = np.arange(1, a1.shape[0] + 1)
+    csum = np.cumsum(np.stack([a1, a2], axis=0), axis=1)
+    cmean = csum / n  # C-style contiguous, cache-locality, SIMD. so loop is still vectorized
+    if roll:
+        cov = np.full_like(n, fill_value=np.nan, dtype=float)
+        for i in range(2, n[-1]):
+            cov[i] = sum((a1[:i+1] - cmean[0, i]) * (a2[:i+1] - cmean[1, i])) / (n[i] - 1)
+    else:
+        cov = sum((a1 - cmean[0, -1]) * (a2 - cmean[-1, -1])) / (n[-1] - 1)
+    if retcov:
+        return cov
+    return cov / np.sqrt(corr_np(a1, a1, retcov=True, roll=roll)*corr_np(a2, a2, retcov=True, roll=roll))
+
+# this function can then be applied with Pandas apply on DF or on DF.values with np.apply_along_axis
+# in Spark can potentially be tried with UDFs
+
+
+# Improvement -  implementation 2                    ##
+# Rolling window implemented in Numpy with efficient view, which should be faster than Pandas rolling
+from typing import List
+def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
+    assert all(a.shape == arrs[0].shape for a in arrs)
+    assert arrs[0].shape[0] >= winsz
+    n = len(arrs)  # length
+    vws = np.lib.stride_tricks.sliding_window_view(np.stack(arrs), (n, winsz))  # view, not copy
+    return np.array(list(map(lambda x: np.corrcoef(x)[0,1], vws.squeeze())))  # apply along axis=1
+
+# it's possible to implement also efficient algorithm, even in C:
+# https://crypto.fit.cvut.cz/sites/default/files/publications/fulltexts/pearson.pdf
+# and parallelize and optimize for AVX:
+# https://dbs.ifi.uni-heidelberg.de/files/Team/eschubert/publications/SSDBM18-covariance-authorcopy.pdf
+
+# mathematically simpler can be approach based on totals:
+# https://math.stackexchange.com/questions/102978/incremental-computation-of-standard-deviation/102982#102982
+
+from numba import njit  # optional further speed up, works also without numba (remove this and next line)
+@njit()
+def rolling_correlation(a, b, window_size):
+    assert len(a) == len(b)
+    assert len(a) >= window_size
+
+    # Create empty array to hold correlation coefficients
+    r = np.empty(len(a) - window_size + 1)
+
+    # Calculate initial window sums
+    sum_x = np.sum(a[:window_size])
+    sum_y = np.sum(b[:window_size])
+    sum_xy = np.sum(a[:window_size] * b[:window_size])
+    sum_x2 = np.sum(a[:window_size] ** 2)
+    sum_y2 = np.sum(b[:window_size] ** 2)
+
+    for i in range(len(r)):  # not possible to parallelize with numba (due to exchange of data between iterations
+        if i > 0:  # If not the first window, update sums
+            sum_x = sum_x - a[i - 1] + a[i + window_size - 1]
+            sum_y = sum_y - b[i - 1] + b[i + window_size - 1]
+            sum_xy = sum_xy - a[i - 1] * b[i - 1] + a[i + window_size - 1] * b[i + window_size - 1]
+            sum_x2 = sum_x2 - a[i - 1] ** 2 + a[i + window_size - 1] ** 2
+            sum_y2 = sum_y2 - b[i - 1] ** 2 + b[i + window_size - 1] ** 2
+
+        numerator = window_size * sum_xy - sum_x * sum_y
+        denominator = np.sqrt((window_size * sum_x2 - sum_x ** 2) * (window_size * sum_y2 - sum_y ** 2))
+
+        r[i] = numerator / denominator
+
+    return r
+
+
+# Testing p4
+a = np.random.random(size=8)
+b = np.random.random(size=8)
+window_size = 3
+
+rolling_correlation(a, b, window_size)
+rolling_correlation_numba(a, b, window_size)  # possible to parallelize with @njit(parrallel=True)
+corr_win_np([a, b], window_size)              # by CPU cores or even GPU with CUDA for many variables a,b,c,d, etc.
+
