@@ -62,7 +62,7 @@ def spark():
     spark.stop()
 
 # for simplicity only use fixed data, avoid request fixture
-def test_corr_res(fixed_lwdfs, corr_params, spark, benchmark):
+def test_corr_spa_res(fixed_lwdfs, corr_params, spark, benchmark):
     pdcorr = rolling_corr(fixed_lwdfs[1], winsz=corr_params[0], minp=1)  # both pd and PySpark use N-1 in denominator
     # choose and check for some company e.g. 5 (arbitrary column):
     ldf = spark.createDataFrame(fixed_lwdfs[0])

@@ -21,10 +21,10 @@ def test_initiate(fixed_data, rndm_data):
     assert len(market.shape) == 1 and market.shape[0] == xret.shape[0]
     assert market.index.is_monotonic_increasing
     # assert xret.shape == (6095, 5000)
-    exp_rows = np.busday_count(pd.to_datetime('2000-01-01').date(), pd.Timestamp.today().date())
+    exp_rows = np.busday_count(pd.to_datetime('2000-01-01').date(), pd.Timestamp.today().ceil(freq='d').date())
     assert xret.shape == (6100, 5000)  # for random changes with run day (uses today's date)
     assert ~np.array_equal(rndm_data[0], market)  # different but equivalent shape
-    assert rndm_data[0].shape == exp_rows, market.shape[1]
+    assert rndm_data[0].shape == (exp_rows, )
     dfran = rndm_data[1].unstack('companyid')
     assert ~np.array_equal(dfran, xret)
     assert dfran.shape == (exp_rows, xret.shape[1])

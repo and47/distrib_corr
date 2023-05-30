@@ -34,7 +34,7 @@ def as_arr(df: pd.DataFrame) -> np.ndarray:
 def corr_params():
     return (505, 375)  # winsz: int, minp: int
 @pytest.mark.parametrize('df', ['fixed_df', 'rndm_df'])
-def test_corr_res(request, df, benchmark):
+def test_corr_pdres(request, df, benchmark):
     rets = request.getfixturevalue(df)  # market and company returns
     rets = fill_firstNaN_ingaps(rets, 0)
     mcorr = rolling_corr(rets, winsz=10, minp=5)  # both pd and np.corr use N-1 in denominator
@@ -45,7 +45,7 @@ def test_corr_res(request, df, benchmark):
 
 
 @pytest.mark.parametrize('df, maxcol', [['fixed_df', COL_LIMIT], ['rndm_df', COL_LIMIT]])
-def test_corr_nans(request, benchmark, df, maxcol, corr_params):
+def test_corr_pdnans(request, benchmark, df, maxcol, corr_params):
     rets = request.getfixturevalue(df)  # market and company returns
     assert rets.index.is_monotonic_increasing
     rets = fill_firstNaN_ingaps(rets.drop(rets.columns[maxcol:-1], axis=1), 0)

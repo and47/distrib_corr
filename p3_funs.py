@@ -2,7 +2,10 @@ import logging
 
 from pyspark.sql import functions as F
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.window import Window
+from pyspark.sql.window import Window  # alternative implementation:
+# from pyspark.pandas.DataFrame import rolling # appears to be not implemented yet in PySpark:
+# https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/supported_pandas_api.html?highlight=rolling%20corr
+
 
 
 def hdist_roll_corr(df: DataFrame, window: int = 500) -> DataFrame:
@@ -20,6 +23,8 @@ def hdist_roll_corr(df: DataFrame, window: int = 500) -> DataFrame:
 
     try:
         # logging.info("Starting calculation...")  # this is done lazily
+        #df = df.filter(F.col('value').isNotNull())  # this is to alternatively avoid NaNs in the output,
+        # effectively making window flexible in size, requiring min_periods to be equal to window (used fillna 0 instead)
 
         # Repartition on the 'X' column, can allow to parameterize the number of chunks
         # df = df.repartition(min(nchunks, int(df.select(F.countDistinct('X')).toPandas().values)), 'X')
