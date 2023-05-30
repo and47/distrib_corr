@@ -143,8 +143,8 @@ def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
 # mathematically simpler can be approach based on totals:
 # https://math.stackexchange.com/questions/102978/incremental-computation-of-standard-deviation/102982#102982
 
-from numba import njit  # optional further speed up, works also without numba (remove this and next line)
-@njit()
+#from numba import njit  # optional further speed up, works also without numba (remove this and next line)
+#@njit()
 def rolling_correlation(a, b, window_size):
     assert len(a) == len(b)
     assert len(a) >= window_size
@@ -181,6 +181,6 @@ b = np.random.random(size=8)
 window_size = 3
 
 rolling_correlation(a, b, window_size)
-rolling_correlation_numba(a, b, window_size)  # possible to parallelize with @njit(parrallel=True)
+rolling_correlation_numba(a, b, window_size)  # possible to parallelize with @njit(parrallel=True), see l.147
 corr_win_np([a, b], window_size)              # by CPU cores or even GPU with CUDA for many variables a,b,c,d, etc.
 
