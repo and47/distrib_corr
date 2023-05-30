@@ -39,6 +39,9 @@ def fill_firstNaN_ingaps(df: pd.DataFrame, val: float = 0.0) -> pd.DataFrame:
 
 # for p4 (faster versions of p2):
 from typing import List
+import numpy as np
+
+
 def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
     assert all(a.shape == arrs[0].shape for a in arrs)
     assert arrs[0].shape[0] >= winsz
@@ -76,6 +79,7 @@ def rolling_correlation(a, b, window_size):
 
     return r
 
+from numba import njit
 @njit()
 def rolling_correlation_numba(a, b, window_size):
     assert len(a) == len(b)

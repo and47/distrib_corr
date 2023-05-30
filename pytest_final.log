@@ -1,0 +1,106 @@
+C:\Users\admin\.conda\envs\main\python.exe "C:/Program Files/JetBrains/PyCharm 2023.1.1/plugins/python/helpers/pycharm/_jb_pytest_runner.py" --path C:\datadev\work\perbak\src\tests -- --jb-show-summary 
+Testing started at 06:44 ...
+Launching pytest with arguments C:\datadev\work\perbak\src\tests in C:\datadev\work\perbak\src\tests
+
+============================= test session starts =============================
+platform win32 -- Python 3.10.9, pytest-7.1.2, pluggy-1.0.0 -- C:\Users\admin\.conda\envs\main\python.exe
+cachedir: .pytest_cache
+benchmark: 3.4.1 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\datadev\work\perbak\src\tests
+plugins: anyio-3.6.2, benchmark-3.4.1
+collecting ... collected 10 items
+
+test_p1funsOnMainData.py::test_initiate PASSED                           [ 10%]random data (mkt and stock mins):  -0.03243053633846773 -0.06292159293367527
+ fixed data (mkt and stock mins):  -0.028345506444168257 -0.06909354203029808
+
+test_p1funsOnMainData.py::test_conversion[fixed_data] 
+test_p1funsOnMainData.py::test_conversion[rndm_data] 
+test_p1funsOnMainData.py::test_overflow[fixed_data] PASSED             [ 20%]PASSED              [ 30%]
+test_p1funsOnMainData.py::test_overflow[rndm_data] 
+test_p2_p4_corr.py::test_corr_pdres[fixed_df] PASSED               [ 40%]PASSED                [ 50%]
+test_p2_p4_corr.py::test_corr_pdres[rndm_df] 
+test_p2_p4_corr.py::test_corr_pdnans[fixed_df-100] PASSED                     [ 60%]PASSED                      [ 70%]PASSED                [ 80%]
+test_p2_p4_corr.py::test_corr_pdnans[rndm_df-100] PASSED                 [ 90%]
+test_p3_hd_corr_spa.py::test_corr_spa_res 23/05/30 06:46:52 WARN Shell: Did not find winutils.exe: {}
+java.io.FileNotFoundException: java.io.FileNotFoundException: HADOOP_HOME and hadoop.home.dir are unset. -see https://wiki.apache.org/hadoop/WindowsProblems
+	at org.apache.hadoop.util.Shell.fileNotFoundException(Shell.java:548)
+	at org.apache.hadoop.util.Shell.getHadoopHomeDir(Shell.java:569)
+	at org.apache.hadoop.util.Shell.getQualifiedBin(Shell.java:592)
+	at org.apache.hadoop.util.Shell.<clinit>(Shell.java:689)
+	at org.apache.hadoop.util.StringUtils.<clinit>(StringUtils.java:79)
+	at org.apache.hadoop.conf.Configuration.getTimeDurationHelper(Configuration.java:1886)
+	at org.apache.hadoop.conf.Configuration.getTimeDuration(Configuration.java:1846)
+	at org.apache.hadoop.conf.Configuration.getTimeDuration(Configuration.java:1819)
+	at org.apache.hadoop.util.ShutdownHookManager.getShutdownTimeout(ShutdownHookManager.java:183)
+	at org.apache.hadoop.util.ShutdownHookManager$HookEntry.<init>(ShutdownHookManager.java:207)
+	at org.apache.hadoop.util.ShutdownHookManager.addShutdownHook(ShutdownHookManager.java:304)
+	at org.apache.spark.util.SparkShutdownHookManager.install(ShutdownHookManager.scala:181)
+	at org.apache.spark.util.ShutdownHookManager$.shutdownHooks$lzycompute(ShutdownHookManager.scala:50)
+	at org.apache.spark.util.ShutdownHookManager$.shutdownHooks(ShutdownHookManager.scala:48)
+	at org.apache.spark.util.ShutdownHookManager$.addShutdownHook(ShutdownHookManager.scala:153)
+	at org.apache.spark.util.ShutdownHookManager$.<init>(ShutdownHookManager.scala:58)
+	at org.apache.spark.util.ShutdownHookManager$.<clinit>(ShutdownHookManager.scala)
+	at org.apache.spark.util.Utils$.createTempDir(Utils.scala:335)
+	at org.apache.spark.deploy.SparkSubmit.prepareSubmitEnvironment(SparkSubmit.scala:344)
+	at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:898)
+	at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:180)
+	at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:203)
+	at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:90)
+	at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:1043)
+	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1052)
+	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+Caused by: java.io.FileNotFoundException: HADOOP_HOME and hadoop.home.dir are unset.
+	at org.apache.hadoop.util.Shell.checkHadoopHomeInner(Shell.java:468)
+	at org.apache.hadoop.util.Shell.checkHadoopHome(Shell.java:439)
+	at org.apache.hadoop.util.Shell.<clinit>(Shell.java:516)
+	... 22 more
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+23/05/30 06:46:52 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+23/05/30 06:46:52 WARN Utils: Service 'SparkUI' could not bind on port 4040. Attempting port 4041.
+23/05/30 06:46:52 WARN Utils: Service 'SparkUI' could not bind on port 4041. Attempting port 4042.
+23/05/30 06:46:52 WARN Utils: Service 'SparkUI' could not bind on port 4042. Attempting port 4043.
+23/05/30 06:46:52 WARN Utils: Service 'SparkUI' could not bind on port 4043. Attempting port 4044.
+PASSED                         [100%]23/05/30 06:47:06 WARN ProcfsMetricsGetter: Exception when trying to compute pagesize, as a result reporting of ProcessTree metrics is stopped
+                                                                                
+
+============================== warnings summary ===============================
+test_p1funsOnMainData.py::test_conversion[fixed_data]
+test_p1funsOnMainData.py::test_conversion[rndm_data]
+  test_p1funsOnMainData.py:35: PytestBenchmarkWarning: Benchmark fixture was not used at all in this test!
+    @pytest.mark.parametrize('data', ['fixed_data', 'rndm_data'])
+
+test_p2_p4_corr.py::test_corr_pdres[fixed_df]
+test_p2_p4_corr.py::test_corr_pdres[rndm_df]
+  test_p2_p4_corr.py:36: PytestBenchmarkWarning: Benchmark fixture was not used at all in this test!
+    @pytest.mark.parametrize('df', ['fixed_df', 'rndm_df'])
+
+test_p3_hd_corr_spa.py: 14 warnings
+  C:\Users\admin\.conda\envs\main\lib\site-packages\pyspark\sql\pandas\utils.py:35: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(pandas.__version__) < LooseVersion(minimum_pandas_version):
+
+test_p3_hd_corr_spa.py::test_corr_spa_res
+  C:\Users\admin\.conda\envs\main\lib\site-packages\pyspark\sql\pandas\conversion.py:371: FutureWarning: iteritems is deprecated and will be removed in a future version. Use .items instead.
+    for column, series in pdf.iteritems():
+
+test_p3_hd_corr_spa.py::test_corr_spa_res
+  C:\Users\admin\.conda\envs\main\lib\site-packages\pyspark\sql\pandas\conversion.py:194: FutureWarning: Passing unit-less datetime64 dtype to .astype is deprecated and will raise in a future version. Pass 'datetime64[ns]' instead
+    series = series.astype(t, copy=False)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+------------------------------------------------------------------------------------------ benchmark: 3 tests ------------------------------------------------------------------------------------------
+Name (time in ms)                       Min                 Max                Mean             StdDev              Median                IQR            Outliers      OPS            Rounds  Iterations
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+test_corr_spa_res                   17.0128 (1.0)       92.7967 (1.0)       43.2586 (1.0)      42.9266 (8.28)      19.9664 (1.0)      56.8379 (7.68)          1;0  23.1168 (1.0)           3           1
+test_corr_pdnans[fixed_df-100]     101.1433 (5.95)     118.5988 (1.28)     106.2871 (2.46)      5.5793 (1.08)     104.5886 (5.24)      7.3974 (1.0)           2;0   9.4085 (0.41)         10           1
+test_corr_pdnans[rndm_df-100]      103.0394 (6.06)     119.4842 (1.29)     108.9316 (2.52)      5.1870 (1.0)      108.7452 (5.45)      9.1461 (1.24)          2;0   9.1801 (0.40)         10           1
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Legend:
+  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.
+  OPS: Operations Per Second, computed as 1 / Mean
+================= 10 passed, 20 warnings in 221.96s (0:03:41) =================
+
+Process finished with exit code 0
