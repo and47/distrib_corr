@@ -98,13 +98,16 @@ xycorrd = xycorr.iloc[minp:]  # 4626 rows, 500-375+1 = 126 rows less than origin
 # pytest-benchmark, (not only ensuring correctness with pytest), as "ranking" may change over time with
 # newer version of Python, Numba, CUDA, Spark, etc.
 
+# In the interest of time and given that my below implementations are pairwise, I'm not
+# benchmarking them against Pandas which does all columns with market return column at once
+
 import numpy as np
 
 # Improvement -  implementation 1                    ##
 # My vectorized NumPy (see contiguous/cache-locality and "SIMD" for why it improves performance)
 #  implementation of Wikipedia "Online" (stable one-pass algorithm):
 # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Covariance
-# Note: it's expanding window not rolling
+# Note: it's expanding window not rolling, can be further speed up with Numba njit (no python or Cython)
 def corr_np(a1: np.ndarray, a2: np.ndarray, retcov: bool = False, roll: bool = False) -> np.ndarray:
     # mean1 = mean2 = corr = N = 0
     assert a1.shape == a2.shape
@@ -134,6 +137,8 @@ def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
     n = len(arrs)  # length
     vws = np.lib.stride_tricks.sliding_window_view(np.stack(arrs), (n, winsz))  # view, not copy
     return np.array(list(map(lambda x: np.corrcoef(x)[0,1], vws.squeeze())))  # apply along axis=1
+
+# Improvement -  implementation 3-4*                    ##
 
 # it's possible to implement also efficient algorithm, even in C:
 # https://crypto.fit.cvut.cz/sites/default/files/publications/fulltexts/pearson.pdf

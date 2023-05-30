@@ -52,3 +52,8 @@ def test_corr_pdnans(request, benchmark, df, maxcol, corr_params):
     mcorr = benchmark(rolling_corr, rets, winsz=corr_params[0], minp=corr_params[1])
     nan_ratio = mcorr.isna().mean().mean()
     assert nan_ratio < 0.2, f"Too many NaNs in output, {nan_ratio:.2%}"
+
+# def test_corr_my_np(fixed_df, benchmark, corr_params):
+#     from p2_corr_p4_improvedPerf import corr_win_np
+#     rets = fill_firstNaN_ingaps(fixed_df.drop(fixed_df.columns[COL_LIMIT:-1], axis=1), 0)
+#     mcorr = benchmark(corr_win_np, rets, winsz=corr_params[0])
