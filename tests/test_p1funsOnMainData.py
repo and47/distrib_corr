@@ -2,9 +2,8 @@ import numpy as np
 import pandas as pd
 
 import pytest
-import tempfile  # use to test compression
+#import tempfile  # use to test compression
 
-#import main
 from p1_funs import persist_rets_bin, load_rets_from_bin, floatr_to_uint_minret, uint_ret_offs_tofloatr
 
 # in conftest.py, we have:

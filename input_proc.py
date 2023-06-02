@@ -7,6 +7,9 @@ import datetime as dt
 
 # loads common data, see tasks/Question specific .py and .ipynb files
 fname = Path(os.getcwd())
+if not Path.exists(Path('data/company_returns.pkl')):
+    import subprocess
+    subprocess.run(['python', 'initiate.py'], cwd='./data')
 xcret = pd.read_pickle('data/company_returns.pkl')
 ydf = pd.read_pickle('data/market_returns.pkl')  # bdays only, doesn't require processing, hence naming
 

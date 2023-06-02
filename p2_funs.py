@@ -50,7 +50,7 @@ def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
     return np.array(list(map(lambda x: np.corrcoef(x)[0,1], vws.squeeze())))  # apply along axis=1
 
 
-def rolling_correlation(a, b, window_size):
+def rolling_correlation(a: np.ndarray, b: np.ndarray, window_size: int) -> np.ndarray:
     assert len(a) == len(b)
     assert len(a) >= window_size
 

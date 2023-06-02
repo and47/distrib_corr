@@ -7,7 +7,7 @@ import numpy.ma as ma
 
 import pytest
 
-from p2_funs import rolling_corr, fill_firstNaN_ingaps
+from p2_funs import rolling_corr, fill_firstNaN_ingaps, corr_win_np, rolling_correlation, rolling_correlation_numba
 # data is imported from conftest.py
 
 COL_LIMIT = 100  # limit number of columns for testing, as local Spark in p3 is slow and below will be compared to it
@@ -53,7 +53,19 @@ def test_corr_pdnans(request, benchmark, df, maxcol, corr_params):
     nan_ratio = mcorr.isna().mean().mean()
     assert nan_ratio < 0.2, f"Too many NaNs in output, {nan_ratio:.2%}"
 
-# def test_corr_my_np(fixed_df, benchmark, corr_params):
-#     from p2_corr_p4_improvedPerf import corr_win_np
-#     rets = fill_firstNaN_ingaps(fixed_df.drop(fixed_df.columns[COL_LIMIT:-1], axis=1), 0)
-#     mcorr = benchmark(corr_win_np, rets, winsz=corr_params[0])
+def test_corr_my_np_onecol(fixed_df, benchmark, corr_params):
+    rets = fixed_df.drop(fixed_df.columns[COL_LIMIT:-1], axis=1).fillna(0)  # simplified test
+    mcorr = benchmark(corr_win_np, arrs=[rets.iloc[:,1].values, rets.iloc[:,-1].values], winsz=corr_params[0])
+    assert np.allclose(np.corrcoef([rets.iloc[:,1].values[-corr_params[0]:], rets.iloc[:,-1].values[-corr_params[0]:]])[0,1],
+                       mcorr[-1]), "results don't match"  # lack of time to properly test, results not comparable
+
+def test_corr_my_np_roll_upd(fixed_df, benchmark, corr_params):
+    rets = fixed_df.drop(fixed_df.columns[COL_LIMIT:-1], axis=1).fillna(0)  # simplified test
+    mcorr = benchmark(rolling_correlation, a=rets.iloc[:,1].values, b=rets.iloc[:,-1].values, window_size=corr_params[0])
+    assert np.allclose(np.corrcoef([rets.iloc[:,1].values[-corr_params[0]:], rets.iloc[:,-1].values[-corr_params[0]:]])[0,1],
+                       mcorr[-1]), "results don't match"  # lack of time to properly test, results not comparable
+def test_corr_my_numba_roll_upd(fixed_df, benchmark, corr_params):
+    rets = fixed_df.drop(fixed_df.columns[COL_LIMIT:-1], axis=1).fillna(0)  # simplified test
+    mcorr = benchmark(rolling_correlation_numba, a=rets.iloc[:,1].values, b=rets.iloc[:,-1].values, window_size=corr_params[0])
+    assert np.allclose(np.corrcoef([rets.iloc[:,1].values[-corr_params[0]:], rets.iloc[:,-1].values[-corr_params[0]:]])[0,1],
+                       mcorr[-1]), "results don't match"  # lack of time to properly test, results not comparable

@@ -149,8 +149,8 @@ def corr_win_np(arrs: List[np.ndarray], winsz: int) -> np.ndarray:
 # https://math.stackexchange.com/questions/102978/incremental-computation-of-standard-deviation/102982#102982
 
 #from numba import njit  # optional further speed up, works also without numba (remove this and next line)
-#@njit()
-def rolling_correlation(a, b, window_size):
+#@njit()  # see p2_funs.py for numba implementation. loops should be efficients with its use of LLVM.
+def rolling_correlation(a: np.ndarray, b: np.ndarray, window_size: int) -> np.ndarray:  # also, can be re-written in C++, which is efficient with loops
     assert len(a) == len(b)
     assert len(a) >= window_size
 
@@ -180,12 +180,18 @@ def rolling_correlation(a, b, window_size):
     return r
 
 
-# Testing p4
-a = np.random.random(size=8)
-b = np.random.random(size=8)
-window_size = 3
+# # Testing p4 (included in Pytest unit tests, see tests/)
+# a = np.random.random(size=8)
+# b = np.random.random(size=8)
+# window_size = 3
+#
+# rolling_correlation(a, b, window_size)
+# rolling_correlation_numba(a, b, window_size)  # possible to parallelize with @njit(parrallel=True), see l.147
+# corr_win_np([a, b], window_size)              # by CPU cores or even GPU with CUDA for many variables a,b,c,d, etc.
 
-rolling_correlation(a, b, window_size)
-rolling_correlation_numba(a, b, window_size)  # possible to parallelize with @njit(parrallel=True), see l.147
-corr_win_np([a, b], window_size)              # by CPU cores or even GPU with CUDA for many variables a,b,c,d, etc.
-
+# more links on distributed correlation algorithms, cpu, unfinished research:
+# https://www.cs.cmu.edu/~hyunahs/papers/ICDM2016.pdf
+# https://arxiv.org/pdf/1605.01584.pdf
+# https://www.mdpi.com/1749942
+# gpu:
+# https://scholarworks.wmich.edu/cgi/viewcontent.cgi?article=1008&context=pcds_reports

@@ -130,6 +130,6 @@ res = w_corr.filter(w_corr.X < 10).toPandas()  # first 10 companies
 # to-do to try:
 #  broadcasting cols market and time
 #  caching them
-#  using custom UDF or numpy fun instead of Pyspark window
+#  using custom UDF or numpy fun from p2_funs.py instead of Pyspark window
+#  more advanced window specs, taking into account business days/calendar or missing values
 #  various cluster optimizations (settings, configs, etc)
-
